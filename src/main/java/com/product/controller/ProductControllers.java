@@ -22,37 +22,42 @@ import org.springframework.web.multipart.MultipartFile;
 import com.product.entity.AllProducts;
 import com.product.entity.ProductFiles;
 import com.product.entity.ProductsDeatils;
+import com.product.entity.SignUp;
+import com.product.repository.SignUpRepo;
+import com.product.service.EmailService;
 import com.product.service.ProductDetailsService;
 import com.product.service.ProductFileService;
+import com.product.service.SignUpService;
 
 @RestController
 @RequestMapping("/product")
 @CrossOrigin("http://localhost:3000,http://10.0.2.15:3000/")
 
 public class ProductControllers {
-	
+
 	@Autowired
 	ProductDetailsService detailsService;
+
 	@PostMapping("/insert")
-	public ResponseEntity<Integer> insertProdDetails(@RequestBody ProductsDeatils deatils){
+	public ResponseEntity<Integer> insertProdDetails(@RequestBody ProductsDeatils deatils) {
 		this.detailsService.insertProducts(deatils);
 		Integer I = deatils.getProductId();
 		return new ResponseEntity<>(I, HttpStatus.OK);
-		
+
 	}
-	
+
 	@GetMapping("/allProducts")
-	public ResponseEntity<List<ProductsDeatils>> allproducts(){
+	public ResponseEntity<List<ProductsDeatils>> allproducts() {
 		List<ProductsDeatils> l1 = this.detailsService.allDetails();
-		return new ResponseEntity<>(l1,HttpStatus.OK);
-		
-		
+		return new ResponseEntity<>(l1, HttpStatus.OK);
+
 	}
-	
+
 	@PostMapping("/insertFiles")
-	public ResponseEntity<String> insertFiles(@RequestPart("file") MultipartFile  files,@RequestParam("productId") Integer productId){
+	public ResponseEntity<String> insertFiles(@RequestPart("file") MultipartFile files,
+			@RequestParam("productId") Integer productId) {
 		try {
-			String data=this.detailsService.insertFiles(files,productId);
+			String data = this.detailsService.insertFiles(files, productId);
 			return new ResponseEntity<>(data, HttpStatus.OK);
 		} catch (IllegalStateException e) {
 			// TODO Auto-generated catch block
@@ -63,34 +68,59 @@ public class ProductControllers {
 			e.printStackTrace();
 			return new ResponseEntity<>("Error", HttpStatus.BAD_REQUEST);
 		}
-		
-		
-		
-		
+
 	}
-	
+
 	@Autowired
 	ProductFileService fileService;
-	
+
 	@PostMapping("/insertFilesandDetails")
-	public ResponseEntity<String> insertProdFilesDetails(@RequestBody ProductsDeatils deatils,@RequestBody ProductFiles files){
+	public ResponseEntity<String> insertProdFilesDetails(@RequestBody ProductsDeatils deatils,
+			@RequestBody ProductFiles files) {
 		this.fileService.saveFilesAndDetails(deatils, files);
 		return new ResponseEntity<>("inserted..!", HttpStatus.OK);
-		
+
+	}
+
+	@GetMapping("/all")
+	public ResponseEntity<List<AllProducts>> getAllProducts() {
+		List<AllProducts> allProducts = detailsService.getAllProducts();
+		return new ResponseEntity<>(allProducts, HttpStatus.OK);
+	}
+
+	@GetMapping("/productbyId/{id}")
+	public ResponseEntity<AllProducts> getProductById(@PathVariable int id) {
+		AllProducts optional = detailsService.getAllbyId(id);
+
+		return new ResponseEntity<AllProducts>(optional, HttpStatus.OK);
+	}
+
+	@Autowired
+	SignUpService signUpService;
+
+	@PostMapping("/signUpDetails")
+	public ResponseEntity<String> insertSignUp(@RequestBody SignUp signUp) {
+		String x = this.signUpService.insertSignUpDetails(signUp);
+		System.out.println(x);
+		return new ResponseEntity<>(x, HttpStatus.OK);
+	}
+
+	@Autowired
+	EmailService emailService;
+
+	@GetMapping("/sendMail")
+	public String sendMail() {
+		String to = "gainisaikumarchinna@gmail.com";
+		String subject = "Test Email";
+		String text = "This is a test email from Spring Boot.";
+		emailService.sendEmail(to, subject, text);
+		return "Email Sent Successfully!";
 	}
 	
-	
-	 @GetMapping("/all")
-	    public ResponseEntity<List<AllProducts>> getAllProducts() {
-	        List<AllProducts> allProducts = detailsService.getAllProducts();
-	        return new ResponseEntity<>(allProducts, HttpStatus.OK);
-	    }
-	 
-	 @GetMapping("/productbyId/{id}")
-	 public ResponseEntity<AllProducts>getProductById(@PathVariable int id){
-		 AllProducts optional=detailsService.getAllbyId(id);
-		 
-		 return new ResponseEntity<AllProducts>(optional, HttpStatus.OK);
-	 }
-	
+	@GetMapping
+	public String logIn() {
+		return null;
+		
+	}
+
 }
