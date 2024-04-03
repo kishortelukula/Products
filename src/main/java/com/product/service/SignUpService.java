@@ -3,6 +3,7 @@ package com.product.service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,8 @@ import com.product.exceptionHandling.BadrequestException;
 import com.product.exceptionHandling.UserNotFoundException;
 import com.product.repository.SignUpRepo;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class SignUpService {
 
@@ -23,6 +26,10 @@ public class SignUpService {
 	@Autowired
 	EmailService emailService;
 
+	
+	
+	//sign up details
+	//inserting into db and sending mail to the user
 	public String insertSignUpDetails(SignUp signUp) {
 
 		List<Object[]> a = this.signUpRepo.findMobileNumberAndEmail(signUp.getEmailId());
@@ -51,68 +58,90 @@ public class SignUpService {
 			return "Inserted";
 		}
 	}
+
 	
-	
-	
+	//Login base on db fetching 
 	public String Login(LogInCredentials logInCredentials) {
 		boolean a = this.signUpRepo.existEmailId(logInCredentials.getUserName());
 		System.out.println(a);
-		if(a == true) {
+		if (a == true) {
 			System.out.println("login..if");
-			String passwordData=logInPassword(logInCredentials.getUserName());
-			System.out.println("passwordData- "+passwordData);
+			String passwordData = logInPassword(logInCredentials.getUserName());
+			System.out.println("passwordData- " + passwordData);
 //			return "Email Exist "+passwordData; 
-			if(passwordData.equals(logInCredentials.getPassword())){
+			if (passwordData.equals(logInCredentials.getPassword())) {
 				return "logIn Successfull";
-				
-			}else {
+
+			} else {
 				return "Password Missmatch";
 			}
 		} else {
 			System.out.println("login..else");
 			return "Email Not Exist";
 		}
-			
+
+	}
+
+	//checking password is available or not and fetching the password
+	public String logInPassword(String emailId) {
+		String passwd = this.signUpRepo.findPasswordByEmail(emailId);
+		if (passwd != null) {
+			System.out.println("password..if");
+			return passwd;
+		} else {
+			System.out.println("passeord..else");
+			return null;
+		}
+
+	}
+	
+	//forgot password 
+	@Transactional
+	public String forgotPwd(LogInCredentials credentials) {
+		boolean user = this.signUpRepo.existEmailId(credentials.getUserName());
+		System.out.println(user);
+		if (user == true) {
+			System.out.println("forgot..if");
+			 Random random = new Random();
+		        long l= 100000 + random.nextInt(900000);
+		        String str=String.valueOf(l);
+		        System.out.println("random "+l);
+		        //update call
+		        this.signUpRepo.updateFieldByEmail(str, credentials.getUserName());
+		        //mail call
+		        emailService.sendEmail(credentials.getUserName(), "Forgot Password OTP", str);
+			return "Password is reset,plz check in your mail";
+		}else {
+			return "Email Not Exist";
+		}
 		
 		
 		
 	}
 	
-	public String logInPassword(String emailId) {
-		String passwd = this.signUpRepo.findPasswordByEmail(emailId);
-		if(passwd!=null) {
-			System.out.println("password..if");
-			return passwd;
-		}else {
-			System.out.println("passeord..else");
-		return null;
-		}
-		
-	}
 
 	public Map<String, Object> LoinSerivce(LogInCredentials credentials) {
-        Map<String, Object> map = new HashMap<>();
-        boolean emailExists = this.signUpRepo.existEmail(credentials.getUserName())
-                .orElseThrow(() -> new UserNotFoundException("Error to fetching user Name"));
+		Map<String, Object> map = new HashMap<>();
+		boolean emailExists = this.signUpRepo.existEmail(credentials.getUserName())
+				.orElseThrow(() -> new UserNotFoundException("Error to fetching user Name"));
 
-        if (emailExists) {
-            String dbPassword = this.signUpRepo.findPasswordEmail(credentials.getUserName())
-                    .orElseThrow(() -> new BadrequestException("Error to fetching password"));
+		if (emailExists) {
+			String dbPassword = this.signUpRepo.findPasswordEmail(credentials.getUserName())
+					.orElseThrow(() -> new BadrequestException("Error to fetching password"));
 
-            if (dbPassword != null && dbPassword.equals(credentials.getPassword())) {
-                map.put("Message", "Login Credentials Matched");
-                map.put("Status", HttpStatus.OK);
-                map.put("data", credentials);
-            } 
-            else {
-   
-                throw new BadrequestException("Password Mismatch");
-            }
-        } else {
-   
-            throw new UserNotFoundException("User not found");
-        }
+			if (dbPassword != null && dbPassword.equals(credentials.getPassword())) {
+				map.put("Message", "Login Credentials Matched");
+				map.put("Status", HttpStatus.OK);
+				map.put("data", credentials);
+			} else {
 
-        return map;
-    }
+				throw new BadrequestException("Password Mismatch");
+			}
+		} else {
+
+			throw new UserNotFoundException("User not found");
+		}
+
+		return map;
+	}
 }
