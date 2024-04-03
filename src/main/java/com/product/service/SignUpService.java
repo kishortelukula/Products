@@ -1,11 +1,17 @@
 package com.product.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.product.dto.LogInCredentials;
 import com.product.entity.SignUp;
+import com.product.exceptionHandling.BadrequestException;
+import com.product.exceptionHandling.UserNotFoundException;
 import com.product.repository.SignUpRepo;
 
 @Service
@@ -46,26 +52,67 @@ public class SignUpService {
 		}
 	}
 	
-	public String Login(SignUp signUp) {
-		boolean logInMailExists = false;
-		List<Object[]> a = this.signUpRepo.findMobileNumberAndEmail(signUp.getEmailId());
-		for (Object[] result : a) {
-			if(result[1].equals(signUp.getEmailId())) {
-				System.out.println("mail exist" + result[1]);
-				logInMailExists=true;
-				break;
+	
+	
+	public String Login(LogInCredentials logInCredentials) {
+		boolean a = this.signUpRepo.existEmailId(logInCredentials.getUserName());
+		System.out.println(a);
+		if(a == true) {
+			System.out.println("login..if");
+			String passwordData=logInPassword(logInCredentials.getUserName());
+			System.out.println("passwordData- "+passwordData);
+//			return "Email Exist "+passwordData; 
+			if(passwordData.equals(logInCredentials.getPassword())){
+				return "logIn Successfull";
+				
+			}else {
+				return "Password Missmatch";
 			}
-		}
-		if (logInMailExists) {
-			return "Login Exist"; 
 		} else {
-			
-			return "LogIn Not Exist";
+			System.out.println("login..else");
+			return "Email Not Exist";
 		}
+			
 		
 		
 		
 	}
+	
+	public String logInPassword(String emailId) {
+		String passwd = this.signUpRepo.findPasswordByEmail(emailId);
+		if(passwd!=null) {
+			System.out.println("password..if");
+			return passwd;
+		}else {
+			System.out.println("passeord..else");
+		return null;
+		}
+		
+	}
 
+	public Map<String, Object> LoinSerivce(LogInCredentials credentials) {
+        Map<String, Object> map = new HashMap<>();
+        boolean emailExists = this.signUpRepo.existEmail(credentials.getUserName())
+                .orElseThrow(() -> new UserNotFoundException("Error to fetching user Name"));
 
+        if (emailExists) {
+            String dbPassword = this.signUpRepo.findPasswordEmail(credentials.getUserName())
+                    .orElseThrow(() -> new BadrequestException("Error to fetching password"));
+
+            if (dbPassword != null && dbPassword.equals(credentials.getPassword())) {
+                map.put("Message", "Login Credentials Matched");
+                map.put("Status", HttpStatus.OK);
+                map.put("data", credentials);
+            } 
+            else {
+   
+                throw new BadrequestException("Password Mismatch");
+            }
+        } else {
+   
+            throw new UserNotFoundException("User not found");
+        }
+
+        return map;
+    }
 }

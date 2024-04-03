@@ -24,7 +24,7 @@ public class SignUp {
 	private String city;
 	private String userType;
 	private Integer pincode;
-	private Integer mobileNumber;
+	private long mobileNumber;
 
 	public SignUp() {
 
@@ -118,16 +118,16 @@ public class SignUp {
 		this.pincode = pincode;
 	}
 
-	public Integer getMobileNumber() {
+	public long getMobileNumber() {
 		return mobileNumber;
 	}
 
-	public void setMobileNumber(Integer mobileNumber) {
+	public void setMobileNumber(long mobileNumber) {
 		this.mobileNumber = mobileNumber;
 	}
 
 	public SignUp(Integer userId, String firstName, String lastName, String emailId, String password, String country,
-			String state, String district, String city, String userType, Integer pincode, Integer mobileNumber) {
+			String state, String district, String city, String userType, Integer pincode, long mobileNumber) {
 		super();
 		this.userId = userId;
 		this.firstName = firstName;
@@ -142,6 +142,8 @@ public class SignUp {
 		this.pincode = pincode;
 		this.mobileNumber = mobileNumber;
 	}
+
+	
 
 
 

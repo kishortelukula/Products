@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.product.dto.LogInCredentials;
 import com.product.entity.AllProducts;
 import com.product.entity.ProductFiles;
 import com.product.entity.ProductsDeatils;
@@ -117,9 +118,10 @@ public class ProductControllers {
 		return "Email Sent Successfully!";
 	}
 	
-	@GetMapping
-	public String logIn() {
-		return null;
+	@GetMapping("/Login")
+	public String logIn(@RequestBody LogInCredentials logInCredentials) {
+		
+		return this.signUpService.Login(logInCredentials);
 		
 	}
 
